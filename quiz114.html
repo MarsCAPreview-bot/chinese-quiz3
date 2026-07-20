@@ -17,7 +17,6 @@
         .options-group input[type="radio"] { display: none; }
         .options-group input[type="radio"]:checked + span { color: #e94560; font-weight: bold; text-shadow: 0 0 5px #e94560; }
         
-        /* 錯誤題目的紅框標示 */
         .wrong-answer { border: 2px solid red !important; background-color: rgba(255, 0, 0, 0.1); }
         
         .btn { padding: 12px 15px; font-size: 16px; margin: 5px 0; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; background-color: #0f3460; color: white; display: block; text-align: center; text-decoration: none; width: 100%; box-sizing: border-box;}
@@ -40,21 +39,17 @@
 
     <div class="container">
         <div class="quiz-area">
-            <!-- 開啟題目按鈕：請替換 href 為實際的 114 年題本 PDF 連結 -->
             <a href="你的114年會考題本PDF連結" target="_blank" class="btn btn-open-pdf">📜 開啟 114 年會考題目本 (另開視窗)</a>
 
             <h3 style="text-align: center; margin-bottom: 20px;">請針對指定題號作答</h3>
             
-            <div id="inputs-container">
-                <!-- 題目欄位由 JS 動態生成 -->
-            </div>
+            <div id="inputs-container"></div>
             
             <button class="btn btn-check" onclick="checkAnswers()">⚔️ 送出攻擊 (對答案)</button>
             
             <div id="result-msg"></div>
 
             <div class="action-buttons">
-                <!-- 詳解連結請替換為實際網址 -->
                 <a href="你的114年詳解PDF連結" class="btn" target="_blank">📖 前往查看 114 年 PDF 詳解</a>
                 <button class="btn" onclick="retryQuiz()">🔄 重新作答</button>
                 <a href="index.html" class="btn btn-back">🏰 回主畫面結算</a>
@@ -68,7 +63,6 @@
     </div>
 
     <script>
-        // 根據 114 年會考解析卷設定的正確答案
         const quizData = [
             { id: 2, answer: 'B' },[cite: 5]
             { id: 3, answer: 'B' },[cite: 5]
@@ -83,12 +77,11 @@
             { id: 20, answer: 'D' },[cite: 5]
             { id: 21, answer: 'D' },[cite: 5]
             { id: 25, answer: 'B' },[cite: 5]
-            { id: 26, answer: 'A' } [cite: 5]
+            { id: 26, answer: 'A' }[cite: 5]
         ];
 
         const totalQuestions = quizData.length;
 
-        // 初始化作答欄位
         function initInputs() {
             const container = document.getElementById('inputs-container');
             container.innerHTML = '';
@@ -121,12 +114,9 @@
             let wrongQuestions = [];
             let allAnswered = true;
 
-            // 檢查是否全做完
             quizData.forEach(q => {
                 const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
-                if (!selected) {
-                    allAnswered = false;
-                }
+                if (!selected) allAnswered = false;
             });
 
             if (!allAnswered) {
@@ -134,13 +124,11 @@
                 return;
             }
 
-            // 開始比對答案
             quizData.forEach(q => {
                 const selectedEl = document.querySelector(`input[name="q${q.id}"]:checked`);
                 const userAnswer = selectedEl.value;
                 const rowEl = document.getElementById(`row-q${q.id}`);
                 
-                // 移除之前的錯誤標示
                 rowEl.classList.remove('wrong-answer');
 
                 if (userAnswer === q.answer) {
@@ -151,10 +139,8 @@
                 }
             });
 
-            // 計算答對率
             const accuracy = Math.round((correctCount / totalQuestions) * 100);
             
-            // 判定訊息
             let msg = '';
             if (accuracy === 100) {
                 msg = "你使出極限威能攻破地下城,發現隱藏菁英寶箱!";
@@ -172,17 +158,19 @@
                 <span style="color:#fff;">${msg}</span>
             `;
 
-            // 儲存至 History
             saveHistory(correctCount, accuracy, wrongQuestions);
             
-            // 儲存總進度給主畫面讀取
-            let progress = JSON.parse(localStorage.getItem('bossProgress')) || {};
-            progress['114年'] = { accuracy: accuracy };
-            localStorage.setItem('bossProgress', JSON.stringify(progress));
-            localStorage.removeItem('chestClaimed_114'); // 每次重新挑戰重置寶箱狀態
+            let history = JSON.parse(localStorage.getItem('bossHistory')) || [];
+            history.push({
+                level: '114年',
+                time: new Date().toLocaleString(),
+                accuracy: accuracy,
+                availableOptions: null,
+                chosenReward: null
+            });
+            localStorage.setItem('bossHistory', JSON.stringify(history));
         }
 
-        // 紀錄歷史
         function saveHistory(correct, accuracy, wrongList) {
             let historyList = JSON.parse(localStorage.getItem('quiz114_history')) || [];
             const record = {
@@ -208,12 +196,10 @@
             logEl.innerHTML = html;
         }
 
-        // 重新作答 (保留歷史，清空欄位選項與紅框)
         function retryQuiz() {
             quizData.forEach(q => {
                 const rowEl = document.getElementById(`row-q${q.id}`);
                 rowEl.classList.remove('wrong-answer');
-                
                 const radios = document.querySelectorAll(`input[name="q${q.id}"]`);
                 radios.forEach(radio => radio.checked = false);
             });
