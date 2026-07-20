@@ -39,7 +39,7 @@
             <option value="">-- 請選擇角色 --</option>
             <option value="Daren">Daren</option>
         </select>
-        <button class="btn-role" onclick="showCharacter()">確認角色</button>
+        <button class="btn-role" onclick="saveCharacter()">確認角色</button>
         <br>
         <img id="character-photo" src="daren.jpg" alt="Daren的照片">
     </div>
@@ -71,16 +71,25 @@
     <p class="small-grey center">冒險者一起攻略會考吧GOGO</p>
 
     <script>
-        function showCharacter() {
+        function saveCharacter() {
             const role = document.getElementById('role-select').value;
             if (role === 'Daren') {
+                localStorage.setItem('selectedRole', role);
                 document.getElementById('character-photo').style.display = 'block';
+                alert('角色設定成功：' + role);
             } else {
                 alert('請先選擇角色！');
             }
         }
 
         window.onload = function() {
+            // 自動恢復已選擇的角色
+            const savedRole = localStorage.getItem('selectedRole');
+            if (savedRole === 'Daren') {
+                document.getElementById('role-select').value = 'Daren';
+                document.getElementById('character-photo').style.display = 'block';
+            }
+
             renderProgress();
             checkPendingChests();
         }
@@ -223,10 +232,7 @@
 
         function resetGame() {
             if (confirm("⚠️ 確定要重新開始遊戲嗎？這將會清除所有地下城的攻略紀錄與寶箱戰利品！")) {
-                localStorage.removeItem('bossHistory');
-                localStorage.removeItem('bossProgress');
-                localStorage.removeItem('quiz115_history');
-                localStorage.removeItem('quiz114_history');
+                localStorage.clear();
                 alert("遊戲進度已全部重置！");
                 location.reload();
             }
