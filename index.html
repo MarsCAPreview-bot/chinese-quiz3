@@ -12,6 +12,8 @@
         button, select { padding: 10px 15px; font-size: 16px; margin: 5px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; }
         .btn-role { background-color: #0f3460; color: white; }
         .btn-level { background-color: #e94560; color: white; text-decoration: none; display: inline-block; text-align: center; }
+        .btn-reset { background-color: #d9534f; color: white; display: block; width: 100%; margin-top: 15px; }
+        .btn-reset:hover { background-color: #c9302c; }
         .small-grey { color: #888; font-size: 12px; margin-top: 10px; text-align: center; }
         
         /* 寶箱樣式 */
@@ -25,7 +27,7 @@
         #character-photo { display: none; width: 150px; height: 150px; border-radius: 50%; margin: 10px auto; object-fit: cover; border: 3px solid #e94560; }
         .center { text-align: center; }
         
-        .progress-item { background: rgba(255,255,255,0.05); padding: 10px; margin-bottom: 10px; border-radius: 5px; font-size: 14px; }
+        .progress-item { background: rgba(255,255,255,0.05); padding: 12px; margin-bottom: 12px; border-radius: 5px; font-size: 14px; border-left: 4px solid #e94560; }
     </style>
 </head>
 <body>
@@ -41,8 +43,7 @@
         </select>
         <button class="btn-role" onclick="showCharacter()">確認角色</button>
         <br>
-        <!-- 請將 src 替換為實際照片的網址或相對路徑 -->
-        <img id="character-photo" src="daren.jpg" alt="Daren的照片">
+        <img id="character-photo" src="https://via.placeholder.com/150?text=Daren" alt="Daren的照片">
     </div>
 
     <!-- 攻略進度 -->
@@ -68,12 +69,14 @@
         </div>
         <br>
         <p class="small-grey">附上各年的題目連結: <a href="https://cap.rcpet.edu.tw/" target="_blank" style="color: #aaa;">會考中心</a></p>
+        
+        <!-- 重新開始遊戲按鈕 -->
+        <button class="btn-reset" onclick="resetGame()">🔄 重新開始遊戲 (清除所有進度)</button>
     </div>
 
     <p class="small-grey center">冒險者一起攻略會考吧GOGO</p>
 
     <script>
-        // 顯示角色照片
         function showCharacter() {
             const role = document.getElementById('role-select').value;
             if (role === 'Daren') {
@@ -83,32 +86,28 @@
             }
         }
 
-        // 讀取進度與寶箱邏輯
         window.onload = function() {
             renderProgress();
-            
-            // 檢查是否有剛打完但還沒開寶箱的關卡 (這裡以 115 或 114 為例，動態抓取最新一次通關且未領獎的)
             checkPendingChests();
         }
 
         function renderProgress() {
-            const progress = JSON.parse(localStorage.getItem('bossProgress')) || {};
+            const history = JSON.parse(localStorage.getItem('bossHistory')) || [];
             const display = document.getElementById('progress-display');
             
-            if (Object.keys(progress).length > 0) {
+            if (history.length > 0) {
                 let html = '';
-                for (let level in progress) {
-                    let data = progress[level];
+                history.forEach((data, index) => {
                     html += `
                         <div class="progress-item">
-                            <strong>${level}地下城</strong><br>
+                            <strong>[紀錄 ${index + 1}] ${data.level}地下城</strong><br>
                             ⏱️ 攻略時間：${data.time || '未知'}<br>
                             📊 答對率：${data.accuracy}%<br>
                             🎁 可選寶箱：${data.availableOptions ? data.availableOptions.join(' / ') : '未解鎖'}<br>
                             🏆 最終選擇：<span style="color: #ffeb3b; font-weight: bold;">${data.chosenReward || '尚未選擇寶箱'}</span>
                         </div>
                     `;
-                }
+                });
                 display.innerHTML = html;
             } else {
                 display.innerHTML = '<p class="center">尚無攻略紀錄，趕快開始挑戰吧！</p>';
@@ -116,19 +115,17 @@
         }
 
         function checkPendingChests() {
-            const progress = JSON.parse(localStorage.getItem('bossProgress')) || {};
+            const history = JSON.parse(localStorage.getItem('bossHistory')) || [];
             
-            // 檢查各年度是否有達標 60% 但還沒選寶箱的
-            for (let level in progress) {
-                let data = progress[level];
-                if (data.accuracy >= 60 && !data.chosenReward) {
-                    showChest(level, data.accuracy);
-                    break; // 每次只彈出一個未領獎的寶箱
+            for (let i = 0; i < history.length; i++) {
+                if (history[i].accuracy >= 60 && !history[i].chosenReward) {
+                    showChest(history[i].level, history[i].accuracy, i);
+                    break;
                 }
             }
         }
 
-        function showChest(level, acc) {
+        function showChest(level, acc, historyIndex) {
             const chestArea = document.getElementById('chest-area');
             const chestTitle = document.getElementById('chest-title');
             const chestOptions = document.getElementById('chest-options');
@@ -149,8 +146,7 @@
                 options = ["舉辦一場3人戰鬥陀螺大賽", "睡覺多一隻娃娃", "選擇想吃的健康晚餐"];
             }
 
-            // 將選項暫存到記憶體中以便後續寫入 localStorage
-            window.currentChestLevel = level;
+            window.currentChestIndex = historyIndex;
             window.currentChestOptions = options;
 
             chestOptions.innerHTML = '';
@@ -163,20 +159,88 @@
             });
         }
 
-        function claimReward(reward) {
-            alert('恭喜獲得戰利品：' + reward + '！');
-            document.getElementById('chest-area').style.display = 'none';
+        function getRewardCategory(reward) {
+            if (reward.includes('youtube')) return 'youtube';
+            if (reward.includes('玩遊戲')) return 'game';
+            if (reward.includes('跳繩')) return 'jump';
+            return 'other';
+        }
 
-            // 更新對應年度的寶箱選擇結果與可選清單
-            let progress = JSON.parse(localStorage.getItem('bossProgress')) || {};
-            if (progress[window.currentChestLevel]) {
-                progress[window.currentChestLevel].availableOptions = window.currentChestOptions;
-                progress[window.currentChestLevel].chosenReward = reward;
-                localStorage.setItem('bossProgress', JSON.stringify(progress));
+        function getRewardValue(reward) {
+            if (reward.includes('30分鐘')) return 30;
+            if (reward.includes('15分鐘')) return 15;
+            if (reward.includes('4000下')) return 4000;
+            if (reward.includes('2000下')) return 2000;
+            return 1;
+        }
+
+        function claimReward(reward) {
+            let history = JSON.parse(localStorage.getItem('bossHistory')) || [];
+            let targetRecord = history[window.currentChestIndex];
+
+            let newCategory = getRewardCategory(reward);
+            let newValue = getRewardValue(reward);
+            let finalRewardText = reward;
+
+            if (newCategory === 'youtube' || newCategory === 'game' || newCategory === 'jump') {
+                let maxExistingValue = 0;
+                history.forEach((rec, idx) => {
+                    if (idx !== window.currentChestIndex && rec.chosenReward) {
+                        let recCat = getRewardCategory(rec.chosenReward);
+                        // 從記錄文字中解析出已經領取過的核心數值（處理可能包含括號備註的字串）
+                        let val = 0;
+                        if (rec.chosenReward.includes('30分鐘') || rec.chosenReward.includes('4000下')) val = (newCategory === 'jump' ? 4000 : 30);
+                        else if (rec.chosenReward.includes('15分鐘') || rec.chosenReward.includes('2000下')) val = (newCategory === 'jump' ? 2000 : 15);
+                        
+                        if (val > maxExistingValue) maxExistingValue = val;
+                    }
+                });
+
+                if (newValue > maxExistingValue) {
+                    let diff = newValue - maxExistingValue;
+                    if (newCategory === 'youtube' || newCategory === 'game') {
+                        finalRewardText = `看youtube ${diff}分鐘` (newCategory === 'youtube' ? `看youtube ${diff}分鐘` : `玩遊戲 ${diff}分鐘`);
+                        // 修正變數賦值
+                        if (newCategory === 'youtube') finalRewardText = `看youtube ${diff}分鐘`;
+                        if (newCategory === 'game') finalRewardText = `玩遊戲 ${diff}分鐘`;
+                    } else if (newCategory === 'jump') {
+                        finalRewardText = `全家一起跳繩${diff}下`;
+                    }
+                } else {
+                    finalRewardText = `${reward} (同屬性已領過相同或更高額度)`;
+                }
+            } else {
+                let alreadyPicked = false;
+                history.forEach((rec, idx) => {
+                    if (idx !== window.currentChestIndex && rec.chosenReward && rec.chosenReward.includes(reward)) {
+                        alreadyPicked = true;
+                    }
+                });
+                if (alreadyPicked) {
+                    finalRewardText = `${reward} (此獨特獎勵先前已領取過)`;
+                }
             }
 
-            // 重新整理介面顯示
+            alert('恭喜獲得戰利品：\n' + finalRewardText);
+            document.getElementById('chest-area').style.display = 'none';
+
+            targetRecord.availableOptions = window.currentChestOptions;
+            targetRecord.chosenReward = finalRewardText;
+            localStorage.setItem('bossHistory', JSON.stringify(history));
+
             renderProgress();
+            checkPendingChests();
+        }
+
+        function resetGame() {
+            if (confirm("⚠️ 確定要重新開始遊戲嗎？這將會清除所有地下城的攻略紀錄與寶箱戰利品！")) {
+                localStorage.removeItem('bossHistory');
+                localStorage.removeItem('bossProgress');
+                localStorage.removeItem('quiz115_history');
+                localStorage.removeItem('quiz114_history');
+                alert("遊戲進度已全部重置！");
+                location.reload();
+            }
         }
     </script>
 </body>
