@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>115年會考地下城</title>
+    <style>
+        body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #222; color: #eee; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: #e94560; }
+        .container { display: flex; flex-direction: column; width: 100%; max-width: 600px; gap: 20px; }
+        .quiz-area { background: #16213e; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        
+        .question-row { margin-bottom: 15px; font-size: 18px; padding: 10px; border-radius: 5px; transition: 0.3s; background: rgba(255,255,255,0.05); }
+        .options-group { display: flex; gap: 10px; margin-top: 5px; justify-content: space-around;}
+        .options-group label { cursor: pointer; padding: 8px 15px; background: #2a2a2a; border-radius: 5px; border: 1px solid #444; flex: 1; text-align: center; transition: 0.2s;}
+        .options-group label:hover { background: #3a3a3a; }
+        .options-group input[type="radio"] { display: none; }
+        .options-group input[type="radio"]:checked + span { color: #e94560; font-weight: bold; text-shadow: 0 0 5px #e94560; }
+        
+        /* 錯誤題目的紅框標示 */
+        .wrong-answer { border: 2px solid red !important; background-color: rgba(255, 0, 0, 0.1); }
+        
+        .btn { padding: 12px 15px; font-size: 16px; margin: 5px 0; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; background-color: #0f3460; color: white; display: block; text-align: center; text-decoration: none; width: 100%; box-sizing: border-box;}
+        .btn:hover { background-color: #1a4f8b; }
+        .btn-open-pdf { background-color: #ff9800; color: #222; margin-bottom: 20px;}
+        .btn-open-pdf:hover { background-color: #e68a00; }
+        .btn-check { background-color: #e94560; margin: 20px 0;}
+        .btn-check:hover { background-color: #ff5c77; }
+        .btn-back { background-color: #4caf50; }
+        .btn-back:hover { background-color: #5cdb61; }
+        
+        #result-msg { margin-top: 20px; font-size: 18px; font-weight: bold; color: #ffeb3b; text-align: center;}
+        #history-area { margin-top: 30px; font-size: 14px; background: #2a2a2a; padding: 15px; border-radius: 5px; }
+        .action-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px;}
+    </style>
+</head>
+<body>
+
+    <h1>115年會考地下城BOSS戰</h1>
+
+    <div class="container">
+        <div class="quiz-area">
+            <!-- 開啟題目按鈕：請替換 href 為實際的題本 PDF 連結 -->
+            <a href="115會考國文題本.pdf" target="_blank" class="btn btn-open-pdf">📜 開啟會考題目本 (另開視窗)</a>
+
+            <h3 style="text-align: center; margin-bottom: 20px;">請針對有標記顏色的題號作答</h3>
+            
+            <div id="inputs-container">
+                <!-- 題目欄位由 JS 動態生成 -->
+            </div>
+            
+            <button class="btn btn-check" onclick="checkAnswers()">⚔️ 送出攻擊 (對答案)</button>
+            
+            <div id="result-msg"></div>
+
+            <div class="action-buttons">
+                <!-- 詳解連結請替換為實際網址 -->
+                <a href="115會考國文解析.pdf" class="btn" target="_blank">📖 前往查看PDF詳解</a>
+                <button class="btn" onclick="retryQuiz()">🔄 重新作答</button>
+                <a href="index.html" class="btn btn-back">🏰 回主畫面結算</a>
+            </div>
+
+            <div id="history-area">
+                <h4>📓 戰鬥紀錄簿</h4>
+                <p id="history-log">尚未有作答紀錄</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 根據「115會考國文解析.pdf」自動填入的正確答案
+        const quizData = [
+            { id: 1, answer: 'B' },
+            { id: 2, answer: 'A' },
+            { id: 3, answer: 'D' },
+            { id: 4, answer: 'A' },
+            { id: 5, answer: 'D' },
+            { id: 7, answer: 'C' },
+            { id: 10, answer: 'D' },
+            { id: 11, answer: 'B' },
+            { id: 13, answer: 'A' },
+            { id: 19, answer: 'A' },
+            { id: 24, answer: 'B' },
+            { id: 25, answer: 'A' },
+            { id: 33, answer: 'C' },
+            { id: 34, answer: 'D' },
+            { id: 37, answer: 'B' },
+            { id: 38, answer: 'A' }
+        ];
+
+        const totalQuestions = quizData.length;
+
+        // 初始化作答欄位
+        function initInputs() {
+            const container = document.getElementById('inputs-container');
+            container.innerHTML = '';
+            
+            quizData.forEach(q => {
+                let optionsHtml = '';
+                ['A', 'B', 'C', 'D'].forEach(opt => {
+                    optionsHtml += `
+                        <label>
+                            <input type="radio" name="q${q.id}" value="${opt}">
+                            <span>${opt}</span>
+                        </label>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="question-row" id="row-q${q.id}">
+                        <strong>題號 ${q.id}.</strong> 
+                        <div class="options-group">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+            updateHistoryLog();
+        }
+
+        function checkAnswers() {
+            let correctCount = 0;
+            let wrongQuestions = [];
+            let allAnswered = true;
+
+            // 檢查是否全做完
+            quizData.forEach(q => {
+                const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
+                if (!selected) {
+                    allAnswered = false;
+                }
+            });
+
+            if (!allAnswered) {
+                alert("⚠️ 發現未填寫的題目！請將所有題目作答完畢再送出攻擊！");
+                return;
+            }
+
+            // 開始比對答案
+            quizData.forEach(q => {
+                const selectedEl = document.querySelector(`input[name="q${q.id}"]:checked`);
+                const userAnswer = selectedEl.value;
+                const rowEl = document.getElementById(`row-q${q.id}`);
+                
+                // 移除之前的錯誤標示
+                rowEl.classList.remove('wrong-answer');
+
+                if (userAnswer === q.answer) {
+                    correctCount++;
+                } else {
+                    rowEl.classList.add('wrong-answer');
+                    wrongQuestions.push(q.id);
+                }
+            });
+
+            // 計算答對率
+            const accuracy = Math.round((correctCount / totalQuestions) * 100);
+            
+            // 判定訊息
+            let msg = '';
+            if (accuracy === 100) {
+                msg = "你使出極限威能攻破地下城,發現隱藏菁英寶箱!";
+            } else if (accuracy >= 80) {
+                msg = "恭喜你擊飛BOSS攻略成功,我知道你可以的,不確定的選項再確認清楚然後來挑戰大魔王找出隱藏菁英寶箱吧";
+            } else if (accuracy >= 60) {
+                msg = "恭喜你成功攻略地下城,旋轉得分";
+            } else {
+                msg = "被爆裂噴飛惹,練完功再來挑戰吧";
+            }
+
+            document.getElementById('result-msg').innerHTML = `
+                答對：${correctCount} / ${totalQuestions}題<br>
+                答對率：${accuracy}%<br><br>
+                <span style="color:#fff;">${msg}</span>
+            `;
+
+            // 儲存至 History
+            saveHistory(correctCount, accuracy, wrongQuestions);
+            
+            // 儲存總進度給主畫面讀取
+            let progress = JSON.parse(localStorage.getItem('bossProgress')) || {};
+            progress['115年'] = { accuracy: accuracy };
+            localStorage.setItem('bossProgress', JSON.stringify(progress));
+            localStorage.removeItem('chestClaimed_115'); // 每次重新挑戰重置寶箱狀態
+        }
+
+        // 紀錄歷史
+        function saveHistory(correct, accuracy, wrongList) {
+            let historyList = JSON.parse(localStorage.getItem('quiz115_history')) || [];
+            const record = {
+                time: new Date().toLocaleString(),
+                correct: correct,
+                accuracy: accuracy,
+                wrongList: wrongList.length > 0 ? wrongList.join(', ') : '無'
+            };
+            historyList.push(record);
+            localStorage.setItem('quiz115_history', JSON.stringify(historyList));
+            updateHistoryLog();
+        }
+
+        function updateHistoryLog() {
+            let historyList = JSON.parse(localStorage.getItem('quiz115_history')) || [];
+            const logEl = document.getElementById('history-log');
+            if (historyList.length === 0) return;
+
+            let html = '';
+            // 反轉陣列，讓最新的紀錄在最上面
+            historyList.slice().reverse().forEach((log, index) => {
+                html += `⚔️ 挑戰 ${historyList.length - index} (${log.time})<br> 答對率: ${log.accuracy}% | 答錯題號: ${log.wrongList}<hr style="border-color:#444; margin:8px 0;">`;
+            });
+            logEl.innerHTML = html;
+        }
+
+        // 重新作答 (保留歷史，清空欄位選項與紅框)
+        function retryQuiz() {
+            quizData.forEach(q => {
+                const rowEl = document.getElementById(`row-q${q.id}`);
+                rowEl.classList.remove('wrong-answer');
+                
+                const radios = document.querySelectorAll(`input[name="q${q.id}"]`);
+                radios.forEach(radio => radio.checked = false);
+            });
+            document.getElementById('result-msg').innerHTML = '';
+        }
+
+        // 網頁載入時執行
+        window.onload = initInputs;
+    </script>
+</body>
+</html>
