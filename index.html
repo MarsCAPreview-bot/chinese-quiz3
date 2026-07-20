@@ -3,245 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>國文會考BOSS攻略挑戰(第1-2冊)</title>
+    <title>115年會考地下城</title>
     <style>
-        body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #1a1a2e; color: #fff; text-align: center; padding: 20px; }
-        h1 { color: #e94560; text-shadow: 2px 2px 4px #000; }
-        .section { background: #16213e; margin: 20px auto; padding: 20px; border-radius: 10px; max-width: 600px; box-shadow: 0 4px 8px rgba(0,0,0,0.5); text-align: left; }
-        .section h2 { text-align: center; }
-        button, select { padding: 10px 15px; font-size: 16px; margin: 5px; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; }
-        .btn-role { background-color: #0f3460; color: white; }
-        .btn-level { background-color: #e94560; color: white; text-decoration: none; display: inline-block; text-align: center; }
-        .btn-reset { background-color: #d9534f; color: white; display: block; width: 100%; margin-top: 15px; }
-        .btn-reset:hover { background-color: #c9302c; }
-        .small-grey { color: #888; font-size: 12px; margin-top: 10px; text-align: center; }
+        body { font-family: 'Microsoft JhengHei', sans-serif; background-color: #222; color: #eee; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        h1 { color: #e94560; }
+        .container { display: flex; flex-direction: column; width: 100%; max-width: 600px; gap: 20px; }
+        .quiz-area { background: #16213e; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         
-        /* 寶箱樣式 */
-        .chest-container { display: none; margin: 20px auto; padding: 20px; border-radius: 10px; max-width: 600px; text-align: center; }
-        .chest-green { background-color: rgba(0, 128, 0, 0.2); border: 2px solid #4caf50; }
-        .chest-yellow { background-color: rgba(255, 255, 0, 0.2); border: 2px solid #ffeb3b; }
-        .chest-purple { background-color: rgba(128, 0, 128, 0.2); border: 2px solid #9c27b0; }
-        .reward-btn { margin: 5px; padding: 10px; border-radius: 5px; cursor: pointer; border: 1px solid white; background: #333; color: white; }
-        .reward-btn:hover { background: #555; }
+        .question-row { margin-bottom: 15px; font-size: 18px; padding: 10px; border-radius: 5px; transition: 0.3s; background: rgba(255,255,255,0.05); }
+        .options-group { display: flex; gap: 10px; margin-top: 5px; justify-content: space-around;}
+        .options-group label { cursor: pointer; padding: 8px 15px; background: #2a2a2a; border-radius: 5px; border: 1px solid #444; flex: 1; text-align: center; transition: 0.2s;}
+        .options-group label:hover { background: #3a3a3a; }
+        .options-group input[type="radio"] { display: none; }
+        .options-group input[type="radio"]:checked + span { color: #e94560; font-weight: bold; text-shadow: 0 0 5px #e94560; }
         
-        #character-photo { display: none; width: 150px; height: 150px; border-radius: 50%; margin: 10px auto; object-fit: cover; border: 3px solid #e94560; }
-        .center { text-align: center; }
+        .wrong-answer { border: 2px solid red !important; background-color: rgba(255, 0, 0, 0.1); }
         
-        .progress-item { background: rgba(255,255,255,0.05); padding: 12px; margin-bottom: 12px; border-radius: 5px; font-size: 14px; border-left: 4px solid #e94560; }
+        .btn { padding: 12px 15px; font-size: 16px; margin: 5px 0; cursor: pointer; border-radius: 5px; border: none; font-weight: bold; background-color: #0f3460; color: white; display: block; text-align: center; text-decoration: none; width: 100%; box-sizing: border-box;}
+        .btn:hover { background-color: #1a4f8b; }
+        .btn-open-pdf { background-color: #ff9800; color: #222; margin-bottom: 20px;}
+        .btn-open-pdf:hover { background-color: #e68a00; }
+        .btn-check { background-color: #e94560; margin: 20px 0;}
+        .btn-check:hover { background-color: #ff5c77; }
+        .btn-back { background-color: #4caf50; }
+        .btn-back:hover { background-color: #5cdb61; }
+        
+        #result-msg { margin-top: 20px; font-size: 18px; font-weight: bold; color: #ffeb3b; text-align: center;}
+        #history-area { margin-top: 30px; font-size: 14px; background: #2a2a2a; padding: 15px; border-radius: 5px; }
+        .action-buttons { display: flex; flex-direction: column; gap: 10px; margin-top: 20px;}
     </style>
 </head>
 <body>
 
-    <h1 class="center">國文會考BOSS攻略挑戰(第1-2冊)</h1>
+    <h1>115年會考地下城BOSS戰</h1>
 
-    <!-- 角色選擇 -->
-    <div class="section center">
-        <h2>角色選擇</h2>
-        <select id="role-select">
-            <option value="">-- 請選擇角色 --</option>
-            <option value="Daren">Daren</option>
-        </select>
-        <button class="btn-role" onclick="showCharacter()">確認角色</button>
-        <br>
-        <img id="character-photo" src="https://via.placeholder.com/150?text=Daren" alt="Daren的照片">
-    </div>
+    <div class="container">
+        <div class="quiz-area">
+            <a href="你的會考題本PDF連結" target="_blank" class="btn btn-open-pdf">📜 開啟會考題目本 (另開視窗)</a>
 
-    <!-- 攻略進度 -->
-    <div class="section">
-        <h2>目前攻略進度</h2>
-        <div id="progress-display">尚無攻略紀錄，趕快開始挑戰吧！</div>
-    </div>
+            <h3 style="text-align: center; margin-bottom: 20px;">請針對有標記顏色的題號作答</h3>
+            
+            <div id="inputs-container"></div>
+            
+            <button class="btn btn-check" onclick="checkAnswers()">⚔️ 送出攻擊 (對答案)</button>
+            
+            <div id="result-msg"></div>
 
-    <!-- 寶箱區 (動態顯示) -->
-    <div id="chest-area" class="chest-container">
-        <h2 id="chest-title"></h2>
-        <p>請選擇你的戰利品（三選一）：</p>
-        <div id="chest-options"></div>
-    </div>
+            <div class="action-buttons">
+                <a href="你的詳解PDF連結" class="btn" target="_blank">📖 前往查看PDF詳解</a>
+                <button class="btn" onclick="retryQuiz()">🔄 重新作答</button>
+                <a href="index.html" class="btn btn-back">🏰 回主畫面結算</a>
+            </div>
 
-    <!-- 關卡選擇 -->
-    <div class="section center">
-        <h2>地下城入口</h2>
-        <p class="small-grey">請選擇您要挑戰的年度測驗BOSS. 3, 2, 1, GO~~SHOOT</p>
-        <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
-            <a href="quiz115.html" class="btn-level">115年會考地下城</a>
-            <a href="quiz114.html" class="btn-level">114年會考地下城</a>
+            <div id="history-area">
+                <h4>📓 戰鬥紀錄簿</h4>
+                <p id="history-log">尚未有作答紀錄</p>
+            </div>
         </div>
-        <br>
-        <p class="small-grey">附上各年的題目連結: <a href="https://cap.rcpet.edu.tw/" target="_blank" style="color: #aaa;">會考中心</a></p>
-        
-        <!-- 重新開始遊戲按鈕 -->
-        <button class="btn-reset" onclick="resetGame()">🔄 重新開始遊戲 (清除所有進度)</button>
     </div>
-
-    <p class="small-grey center">冒險者一起攻略會考吧GOGO</p>
 
     <script>
-        function showCharacter() {
-            const role = document.getElementById('role-select').value;
-            if (role === 'Daren') {
-                document.getElementById('character-photo').style.display = 'block';
-            } else {
-                alert('請先選擇角色！');
-            }
-        }
+        const quizData = [
+            { id: 1, answer: 'B' },
+            { id: 2, answer: 'A' },
+            { id: 3, answer: 'D' },
+            { id: 4, answer: 'A' },
+            { id: 5, answer: 'D' },
+            { id: 7, answer: 'C' },
+            { id: 10, answer: 'D' },
+            { id: 11, answer: 'B' },
+            { id: 13, answer: 'A' },
+            { id: 19, answer: 'A' },
+            { id: 24, answer: 'B' },
+            { id: 25, answer: 'A' },
+            { id: 33, answer: 'C' },
+            { id: 34, answer: 'D' },
+            { id: 37, answer: 'B' },
+            { id: 38, answer: 'A' }
+        ];
 
-        window.onload = function() {
-            renderProgress();
-            checkPendingChests();
-        }
+        const totalQuestions = quizData.length;
 
-        function renderProgress() {
-            const history = JSON.parse(localStorage.getItem('bossHistory')) || [];
-            const display = document.getElementById('progress-display');
+        function initInputs() {
+            const container = document.getElementById('inputs-container');
+            container.innerHTML = '';
             
-            if (history.length > 0) {
-                let html = '';
-                history.forEach((data, index) => {
-                    html += `
-                        <div class="progress-item">
-                            <strong>[紀錄 ${index + 1}] ${data.level}地下城</strong><br>
-                            ⏱️ 攻略時間：${data.time || '未知'}<br>
-                            📊 答對率：${data.accuracy}%<br>
-                            🎁 可選寶箱：${data.availableOptions ? data.availableOptions.join(' / ') : '未解鎖'}<br>
-                            🏆 最終選擇：<span style="color: #ffeb3b; font-weight: bold;">${data.chosenReward || '尚未選擇寶箱'}</span>
-                        </div>
+            quizData.forEach(q => {
+                let optionsHtml = '';
+                ['A', 'B', 'C', 'D'].forEach(opt => {
+                    optionsHtml += `
+                        <label>
+                            <input type="radio" name="q${q.id}" value="${opt}">
+                            <span>${opt}</span>
+                        </label>
                     `;
                 });
-                display.innerHTML = html;
-            } else {
-                display.innerHTML = '<p class="center">尚無攻略紀錄，趕快開始挑戰吧！</p>';
-            }
-        }
 
-        function checkPendingChests() {
-            const history = JSON.parse(localStorage.getItem('bossHistory')) || [];
-            
-            for (let i = 0; i < history.length; i++) {
-                if (history[i].accuracy >= 60 && !history[i].chosenReward) {
-                    showChest(history[i].level, history[i].accuracy, i);
-                    break;
-                }
-            }
-        }
-
-        function showChest(level, acc, historyIndex) {
-            const chestArea = document.getElementById('chest-area');
-            const chestTitle = document.getElementById('chest-title');
-            const chestOptions = document.getElementById('chest-options');
-            chestArea.style.display = 'block';
-
-            let options = [];
-            if (acc === 100) {
-                chestArea.className = 'chest-container chest-purple';
-                chestTitle.innerText = `🟣 ${level} 菁英探險者寶箱開啟！`;
-                options = ["看youtube 30分鐘", "玩遊戲30分鐘", "全家一起跳繩4000下"];
-            } else if (acc >= 80) {
-                chestArea.className = 'chest-container chest-yellow';
-                chestTitle.innerText = `🟡 ${level} 熟練探險者寶箱開啟！`;
-                options = ["看youtube 15分鐘", "玩遊戲15分鐘", "全家一起跳繩2000下"];
-            } else if (acc >= 60) {
-                chestArea.className = 'chest-container chest-green';
-                chestTitle.innerText = `🟢 ${level} 新手冒險者寶箱開啟！`;
-                options = ["舉辦一場3人戰鬥陀螺大賽", "睡覺多一隻娃娃", "選擇想吃的健康晚餐"];
-            }
-
-            window.currentChestIndex = historyIndex;
-            window.currentChestOptions = options;
-
-            chestOptions.innerHTML = '';
-            options.forEach(opt => {
-                let btn = document.createElement('button');
-                btn.className = 'reward-btn';
-                btn.innerText = opt;
-                btn.onclick = () => claimReward(opt);
-                chestOptions.appendChild(btn);
+                container.innerHTML += `
+                    <div class="question-row" id="row-q${q.id}">
+                        <strong>題號 ${q.id}.</strong> 
+                        <div class="options-group">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
             });
+            updateHistoryLog();
         }
 
-        function getRewardCategory(reward) {
-            if (reward.includes('youtube')) return 'youtube';
-            if (reward.includes('玩遊戲')) return 'game';
-            if (reward.includes('跳繩')) return 'jump';
-            return 'other';
-        }
+        function checkAnswers() {
+            let correctCount = 0;
+            let wrongQuestions = [];
+            let allAnswered = true;
 
-        function getRewardValue(reward) {
-            if (reward.includes('30分鐘')) return 30;
-            if (reward.includes('15分鐘')) return 15;
-            if (reward.includes('4000下')) return 4000;
-            if (reward.includes('2000下')) return 2000;
-            return 1;
-        }
+            quizData.forEach(q => {
+                const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
+                if (!selected) allAnswered = false;
+            });
 
-        function claimReward(reward) {
-            let history = JSON.parse(localStorage.getItem('bossHistory')) || [];
-            let targetRecord = history[window.currentChestIndex];
+            if (!allAnswered) {
+                alert("⚠️ 發現未填寫的題目！請將所有題目作答完畢再送出攻擊！");
+                return;
+            }
 
-            let newCategory = getRewardCategory(reward);
-            let newValue = getRewardValue(reward);
-            let finalRewardText = reward;
+            quizData.forEach(q => {
+                const selectedEl = document.querySelector(`input[name="q${q.id}"]:checked`);
+                const userAnswer = selectedEl.value;
+                const rowEl = document.getElementById(`row-q${q.id}`);
+                
+                rowEl.classList.remove('wrong-answer');
 
-            if (newCategory === 'youtube' || newCategory === 'game' || newCategory === 'jump') {
-                let maxExistingValue = 0;
-                history.forEach((rec, idx) => {
-                    if (idx !== window.currentChestIndex && rec.chosenReward) {
-                        let recCat = getRewardCategory(rec.chosenReward);
-                        // 從記錄文字中解析出已經領取過的核心數值（處理可能包含括號備註的字串）
-                        let val = 0;
-                        if (rec.chosenReward.includes('30分鐘') || rec.chosenReward.includes('4000下')) val = (newCategory === 'jump' ? 4000 : 30);
-                        else if (rec.chosenReward.includes('15分鐘') || rec.chosenReward.includes('2000下')) val = (newCategory === 'jump' ? 2000 : 15);
-                        
-                        if (val > maxExistingValue) maxExistingValue = val;
-                    }
-                });
-
-                if (newValue > maxExistingValue) {
-                    let diff = newValue - maxExistingValue;
-                    if (newCategory === 'youtube' || newCategory === 'game') {
-                        finalRewardText = `看youtube ${diff}分鐘` (newCategory === 'youtube' ? `看youtube ${diff}分鐘` : `玩遊戲 ${diff}分鐘`);
-                        // 修正變數賦值
-                        if (newCategory === 'youtube') finalRewardText = `看youtube ${diff}分鐘`;
-                        if (newCategory === 'game') finalRewardText = `玩遊戲 ${diff}分鐘`;
-                    } else if (newCategory === 'jump') {
-                        finalRewardText = `全家一起跳繩${diff}下`;
-                    }
+                if (userAnswer === q.answer) {
+                    correctCount++;
                 } else {
-                    finalRewardText = `${reward} (同屬性已領過相同或更高額度)`;
+                    rowEl.classList.add('wrong-answer');
+                    wrongQuestions.push(q.id);
                 }
+            });
+
+            const accuracy = Math.round((correctCount / totalQuestions) * 100);
+            
+            let msg = '';
+            if (accuracy === 100) {
+                msg = "你使出極限威能攻破地下城,發現隱藏菁英寶箱!";
+            } else if (accuracy >= 80) {
+                msg = "恭喜你擊飛BOSS攻略成功,我知道你可以的,不確定的選項再確認清楚然後來挑戰大魔王找出隱藏菁英寶箱吧";
+            } else if (accuracy >= 60) {
+                msg = "恭喜你成功攻略地下城,旋轉得分";
             } else {
-                let alreadyPicked = false;
-                history.forEach((rec, idx) => {
-                    if (idx !== window.currentChestIndex && rec.chosenReward && rec.chosenReward.includes(reward)) {
-                        alreadyPicked = true;
-                    }
-                });
-                if (alreadyPicked) {
-                    finalRewardText = `${reward} (此獨特獎勵先前已領取過)`;
-                }
+                msg = "被爆裂噴飛惹,練完功再來挑戰吧";
             }
 
-            alert('恭喜獲得戰利品：\n' + finalRewardText);
-            document.getElementById('chest-area').style.display = 'none';
+            document.getElementById('result-msg').innerHTML = `
+                答對：${correctCount} / ${totalQuestions}題<br>
+                答對率：${accuracy}%<br><br>
+                <span style="color:#fff;">${msg}</span>
+            `;
 
-            targetRecord.availableOptions = window.currentChestOptions;
-            targetRecord.chosenReward = finalRewardText;
+            saveHistory(correctCount, accuracy, wrongQuestions);
+            
+            // 推送到主畫面的 bossHistory 陣列中以記錄所有進度與時間
+            let history = JSON.parse(localStorage.getItem('bossHistory')) || [];
+            history.push({
+                level: '115年',
+                time: new Date().toLocaleString(),
+                accuracy: accuracy,
+                availableOptions: null,
+                chosenReward: null
+            });
             localStorage.setItem('bossHistory', JSON.stringify(history));
-
-            renderProgress();
-            checkPendingChests();
         }
 
-        function resetGame() {
-            if (confirm("⚠️ 確定要重新開始遊戲嗎？這將會清除所有地下城的攻略紀錄與寶箱戰利品！")) {
-                localStorage.removeItem('bossHistory');
-                localStorage.removeItem('bossProgress');
-                localStorage.removeItem('quiz115_history');
-                localStorage.removeItem('quiz114_history');
-                alert("遊戲進度已全部重置！");
-                location.reload();
-            }
+        function saveHistory(correct, accuracy, wrongList) {
+            let historyList = JSON.parse(localStorage.getItem('quiz115_history')) || [];
+            const record = {
+                time: new Date().toLocaleString(),
+                correct: correct,
+                accuracy: accuracy,
+                wrongList: wrongList.length > 0 ? wrongList.join(', ') : '無'
+            };
+            historyList.push(record);
+            localStorage.setItem('quiz115_history', JSON.stringify(historyList));
+            updateHistoryLog();
         }
+
+        function updateHistoryLog() {
+            let historyList = JSON.parse(localStorage.getItem('quiz115_history')) || [];
+            const logEl = document.getElementById('history-log');
+            if (historyList.length === 0) return;
+
+            let html = '';
+            historyList.slice().reverse().forEach((log, index) => {
+                html += `⚔️ 挑戰 ${historyList.length - index} (${log.time})<br> 答對率: ${log.accuracy}% | 答錯題號: ${log.wrongList}<hr style="border-color:#444; margin:8px 0;">`;
+            });
+            logEl.innerHTML = html;
+        }
+
+        function retryQuiz() {
+            quizData.forEach(q => {
+                const rowEl = document.getElementById(`row-q${q.id}`);
+                rowEl.classList.remove('wrong-answer');
+                const radios = document.querySelectorAll(`input[name="q${q.id}"]`);
+                radios.forEach(radio => radio.checked = false);
+            });
+            document.getElementById('result-msg').innerHTML = '';
+        }
+
+        window.onload = initInputs;
     </script>
 </body>
 </html>
